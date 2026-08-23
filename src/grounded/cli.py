@@ -14,6 +14,7 @@ from typing import Any, Sequence
 from .audit import AuditLogger
 from .decision import DecisionStatus
 from .evaluation import GroundedEvaluator
+from .pipeline import GroundedPipeline
 from .public import GroundedPublicInterface, PublicGroundedResponse
 
 
@@ -85,27 +86,32 @@ def _build_parser() -> argparse.ArgumentParser:
     ask.add_argument("question", help="the question to evaluate")
     ask.add_argument("--json", action="store_true", help="print one deterministic JSON response")
     ask.add_argument("--audit", type=Path, help="append the execution to a local JSONL audit file")
+    ask.add_argument("--artifacts", type=Path, help="load provisions, amendments, and index from an artifact directory")
 
     evaluate = subparsers.add_parser("evaluate", help="run the deterministic regression suite")
     evaluate.add_argument("--json", action="store_true", help="print the evaluation report as JSON")
     evaluate.add_argument("--audit", type=Path, help="append each evaluation execution to a local JSONL audit file")
+    evaluate.add_argument("--artifacts", type=Path, help="load provisions, amendments, and index from an artifact directory")
     return parser
 
 
 def _run_ask(args: argparse.Namespace) -> int:
+    pipeline = GroundedPipeline(artifact_root=args.artifacts) if args.artifacts is not None else None
     if args.audit is None:
-        response = GroundedPublicInterface().answer_question(args.question)
+        response = GroundedPublicInterface(pipeline).answer_question(args.question)
     else:
-        response = AuditLogger(args.audit).record_question(args.question).response
+        response = AuditLogger(args.audit, pipeline).record_question(args.question).response
     _print_response(response, args.json)
     return EXIT_OK if response.status is DecisionStatus.ANSWERABLE else EXIT_STATUS_CODES[response.status]
 
 
 def _run_evaluate(args: argparse.Namespace) -> int:
+    pipeline = GroundedPipeline(artifact_root=args.artifacts) if args.artifacts is not None else None
+    interface = GroundedPublicInterface(pipeline)
     if args.audit is None:
-        report = GroundedEvaluator().run()
+        report = GroundedEvaluator(interface=interface).run()
     else:
-        report = GroundedEvaluator(audit_logger=AuditLogger(args.audit)).run()
+        report = GroundedEvaluator(interface=interface, audit_logger=AuditLogger(args.audit, pipeline)).run()
 
     if args.json:
         payload = {

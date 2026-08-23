@@ -113,9 +113,65 @@ def _amendment_index(record: AmendmentRecord) -> _IndexedRecord:
 class LexicalRetriever:
     """In-memory deterministic lexical retriever for source records."""
 
-    def __init__(self, provisions: list[ProvisionRecord], amendments: list[AmendmentRecord] | None = None):
-        self._records = tuple(_provision_index(record) for record in provisions)
-        self._records += tuple(_amendment_index(record) for record in (amendments or []))
+    def __init__(
+        self,
+        provisions: list[ProvisionRecord],
+        amendments: list[AmendmentRecord] | None = None,
+        index_artifact: list[dict] | None = None,
+    ):
+        if index_artifact is None:
+            self._records = tuple(_provision_index(record) for record in provisions)
+            self._records += tuple(_amendment_index(record) for record in (amendments or []))
+        else:
+            self._records = self._records_from_artifact(provisions, amendments or [], index_artifact)
+
+    @staticmethod
+    def _record_key(record: PolicyRecord) -> str:
+        if isinstance(record, ProvisionRecord):
+            return f"provision:{record.provision_no}"
+        return f"amendment:{record.amendment_id}:{record.amendment_paragraph}"
+
+    def export_index(self) -> list[dict]:
+        """Serialize the already-built lexical index in stable record order."""
+
+        return [
+            {
+                "body": item.body,
+                "cross_references": list(item.cross_references),
+                "heading": item.heading,
+                "identifier": item.identifier,
+                "record_key": self._record_key(item.record),
+                "tokens": list(item.tokens),
+            }
+            for item in self._records
+        ]
+
+    @classmethod
+    def _records_from_artifact(
+        cls,
+        provisions: list[ProvisionRecord],
+        amendments: list[AmendmentRecord],
+        payload: list[dict],
+    ) -> tuple[_IndexedRecord, ...]:
+        records = {cls._record_key(record): record for record in (*provisions, *amendments)}
+        loaded: list[_IndexedRecord] = []
+        for item in payload:
+            record = records.get(item["record_key"])
+            if record is None:
+                raise ValueError(f"Search index references unknown record {item['record_key']}")
+            tokens = tuple(item["tokens"])
+            loaded.append(_IndexedRecord(
+                record=record,
+                body=item["body"],
+                heading=item["heading"],
+                tokens=tokens,
+                token_set=frozenset(tokens),
+                identifier=item["identifier"],
+                cross_references=tuple(item["cross_references"]),
+            ))
+        if len(loaded) != len(records):
+            raise ValueError("Search index does not contain every stored record")
+        return tuple(loaded)
 
     def retrieve(self, query: str, top_k: int = 10) -> list[RetrievalResult]:
         """Return ranked non-zero candidates without applying policy changes."""

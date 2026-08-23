@@ -37,6 +37,24 @@ python scripts\grounded.py evaluate --json
 python scripts\grounded.py evaluate --audit audit\evaluation.jsonl
 ```
 
+Build reproducible offline source and search artifacts with:
+
+```powershell
+python scripts\build_artifacts.py
+```
+
+The default output is `build\artifacts`. Load those artifacts at runtime with:
+
+```powershell
+python scripts\grounded.py ask "What is the household resource limit?" --artifacts build\artifacts
+```
+
+Inspect the build/load equivalence and amendment integrity validation with:
+
+```powershell
+python scripts\inspect_artifacts.py
+```
+
 The evaluation command exits `0` when all cases pass and `11` when a
 regression case fails. Use `python scripts\grounded.py --help` and
 `python scripts\grounded.py ask --help` for concise usage information.

@@ -15,6 +15,7 @@ from .ingest import parse_policy_manual
 from .models import AmendmentRecord, ProvisionRecord
 from .question import QuestionSpec, analyze_question
 from .retrieval import LexicalRetriever, RetrievalResult
+from .store import load_artifacts
 from .temporal import ApplicabilityDecision, ApplicabilityStatus, TemporalApplicabilityResolver
 
 
@@ -46,7 +47,16 @@ class GroundedPipeline:
         amendments: Iterable[AmendmentRecord] | None = None,
         top_k: int = 20,
         source_root: str | Path | None = None,
+        artifact_root: str | Path | None = None,
     ):
+        artifact_index = None
+        if artifact_root is not None:
+            artifacts = load_artifacts(artifact_root)
+            if provisions is None:
+                provisions = artifacts.provisions.records
+            if amendments is None:
+                amendments = artifacts.amendments.records
+            artifact_index = list(artifacts.search_index)
         if provisions is None or amendments is None:
             root = Path(source_root) if source_root is not None else Path(__file__).parents[2]
             if provisions is None:
@@ -56,7 +66,7 @@ class GroundedPipeline:
         self.provisions = tuple(provisions)
         self.amendments = tuple(amendments)
         self.top_k = top_k
-        self.retriever = LexicalRetriever(list(self.provisions), list(self.amendments))
+        self.retriever = LexicalRetriever(list(self.provisions), list(self.amendments), artifact_index)
         self.temporal_resolver = TemporalApplicabilityResolver(list(self.amendments))
         self.evidence_analyzer = EvidenceAnalyzer(list(self.provisions), list(self.amendments))
         self.decision_gate = DecisionGate()

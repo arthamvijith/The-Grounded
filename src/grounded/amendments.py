@@ -129,14 +129,24 @@ def _inserted_number(lines: list[str], start: int, end: int) -> str:
 
 
 def validate_amendment_targets(records: list[AmendmentRecord], provisions: list[ProvisionRecord]) -> None:
-    """Raise when a non-insertion targets an unknown original provision."""
+    """Validate targets and old-text integrity without mutating source records."""
 
     known = {provision.provision_no for provision in provisions}
+    prior_text = {provision.provision_no: provision.original_text for provision in provisions}
     for record in records:
         if record.operation != "insert" and record.target_provision not in known:
             raise ValueError(f"Amendment {record.amendment_id} paragraph {record.amendment_paragraph} targets unknown provision {record.target_provision}")
         if record.operation == "insert" and record.insertion_after and record.insertion_after not in known:
             raise ValueError(f"Insertion {record.target_provision} follows unknown provision {record.insertion_after}")
+        if record.old_text is not None:
+            current = prior_text.get(record.target_provision)
+            if current is None or record.old_text not in current:
+                raise ValueError(
+                    f"Amendment {record.amendment_id} paragraph {record.amendment_paragraph} "
+                    f"old_text does not match target provision {record.target_provision}"
+                )
+            if record.operation == "substitute":
+                prior_text[record.target_provision] = current.replace(record.old_text, record.new_text, 1)
 
 
 def _offsets(text: str) -> list[int]:
