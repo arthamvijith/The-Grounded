@@ -19,9 +19,15 @@ def test_answerable_question_has_structured_output(capsys):
     code, output, error = run_cli("ask", "What is the household resource limit?", capsys=capsys)
     assert code == 0
     assert error == ""
-    assert "status: ANSWERABLE" in output
-    assert "answer permitted: True" in output
-    assert "source provisions:" in output
+    assert "THE GROUNDED" in output
+    assert "STATUS: ANSWERABLE" in output
+    assert "ANSWER:" in output
+    assert "SOURCE:" in output
+    assert "GROUNDING:" in output
+    assert "Citation(" not in output
+    assert "section-1" not in output
+    assert "source_document=" not in output
+    assert "C:\\Users\\" not in output
 
 
 def test_non_answerable_statuses_have_distinct_exit_codes(capsys):
@@ -34,8 +40,10 @@ def test_non_answerable_statuses_have_distinct_exit_codes(capsys):
     for question, status, exit_code in cases:
         code, output, _ = run_cli("ask", question, capsys=capsys)
         assert code == exit_code
-        assert f"status: {status}" in output
-        assert "answer permitted: False" in output
+        assert f"STATUS: {status}" in output
+        assert "RESULT:" in output
+        assert "NEXT ACTION:" in output
+        assert "Citation(" not in output
 
 
 def test_amended_question_preserves_provenance(capsys):
@@ -45,9 +53,26 @@ def test_amended_question_preserves_provenance(capsys):
         capsys=capsys,
     )
     assert code == 0
-    assert "status: ANSWERABLE" in output
-    assert "2026-01" in output
-    assert "1.1" in output
+    assert "STATUS: ANSWERABLE" in output
+    assert "§6.4.1 — Amendment 2026-01 §1.1" in output
+    assert "Citation(" not in output
+
+
+def test_human_calculation_output_is_concise_and_grounded(capsys):
+    code, output, _ = run_cli(
+        "ask",
+        "What is the $175 earnings disregard for a determination on 1 April 2026?",
+        "--gross-monthly-earnings",
+        "500",
+        capsys=capsys,
+    )
+    assert code == 0
+    assert "CALCULATION:" in output
+    assert "Gross monthly earnings:  $500" in output
+    assert "Earnings disregard:    -$175" in output
+    assert "Countable earnings:     $325" in output
+    assert "§6.4.1 — Amendment 2026-01 §1.1" in output
+    assert "C:\\Users\\" not in output
 
 
 def test_json_output_is_serializable_and_structured(capsys):
@@ -59,6 +84,18 @@ def test_json_output_is_serializable_and_structured(capsys):
     assert payload["answer_permitted"] is False
     assert payload["sections"] == []
     assert payload["next_action"] == "explain_insufficient_evidence"
+
+
+def test_json_output_remains_machine_readable_after_human_formatting(capsys):
+    code, output, error = run_cli("ask", "What is the household resource limit?", "--json", capsys=capsys)
+    assert code == 0
+    assert error == ""
+    payload = json.loads(output)
+    assert payload["status"] == "ANSWERABLE"
+    assert payload["answer_permitted"] is True
+    assert payload["sections"]
+    assert payload["citations"]
+    assert payload["citations"][0]["source_document"]
 
 
 def test_evaluation_command_passes(capsys):

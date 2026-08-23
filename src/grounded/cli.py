@@ -110,6 +110,141 @@ def _print_response(response: PublicGroundedResponse, as_json: bool) -> None:
     print(f"citations: {response.citations}")
 
 
+def _money(value: Any, negative: bool = False) -> str:
+    amount = str(value)
+    if amount.endswith(".0"):
+        amount = amount[:-2]
+    return f"{'-' if negative else ''}${amount}"
+
+
+def _source_name(source_document: str) -> str:
+    source_name = Path(source_document).name.lower()
+    if "amendment" in source_name:
+        return "Amendment source"
+    if "policy-manual" in source_name:
+        return "Original Policy Manual"
+    return "Supplied policy source"
+
+
+def _citation_text(citation: Any) -> str:
+    if citation.amendment_id is not None:
+        paragraph = ""
+        if citation.amendment_paragraph is not None:
+            paragraph = f" {chr(0xA7)}{citation.amendment_paragraph}"
+        return f"{citation.provision_id} — Amendment {citation.amendment_id}{paragraph}"
+    return f"{citation.provision_id} — {_source_name(citation.source_document)}"
+
+
+def _print_calculation(calculation: Any) -> None:
+    if calculation.calculation is None:
+        print("CALCULATION:")
+        print(f"Not available: {calculation.reason}")
+        return
+    calculated = calculation.calculation
+    provenance = calculated.provenance
+    print("CALCULATION:")
+    print(f"Gross monthly earnings:  {_money(calculated.gross_monthly_earnings)}")
+    print(f"Earnings disregard:    {_money(calculated.disregard, negative=True)}")
+    print(f"Countable earnings:     {_money(calculated.countable_monthly_earnings)}")
+    print("Calculation source:")
+    if provenance.amendment_id is not None:
+        print(
+            f"{provenance.provision_id} — Amendment {provenance.amendment_id}"
+            f" {chr(0xA7)}{provenance.amendment_paragraph}"
+        )
+    else:
+        print(f"{provenance.provision_id} — {_source_name(provenance.source_document)}")
+
+
+def _blocking_reason(response: PublicGroundedResponse) -> str:
+    reasons = {
+        DecisionStatus.NEEDS_CLARIFICATION: "Required information is missing.",
+        DecisionStatus.CONFLICTING_AUTHORITY: "Applicable policy provisions conflict.",
+        DecisionStatus.BROKEN_CROSS_REFERENCE: "A material policy cross-reference cannot be resolved.",
+        DecisionStatus.INSUFFICIENT_EVIDENCE: "No authoritative policy evidence supports the requested conclusion.",
+        DecisionStatus.OUT_OF_SCOPE: "The question is outside the supplied policy scope.",
+    }
+    return reasons.get(response.status, response.refusal_reason or response.status.value)
+
+
+def _print_conflicts(conflicts: Sequence[Any]) -> None:
+    for conflict in conflicts:
+        provision_ids = getattr(conflict, "provision_ids", ())
+        reason = getattr(conflict, "reason", "")
+        print(f"- {' / '.join(provision_ids)}: {reason}")
+
+
+def _print_gaps(gaps: Sequence[Any]) -> None:
+    for gap in gaps:
+        code = getattr(gap, "code", "GAP")
+        provision_ids = getattr(gap, "provision_ids", ())
+        suffix = f" ({', '.join(provision_ids)})" if provision_ids else ""
+        print(f"- {code}{suffix}")
+
+
+def _print_response(response: PublicGroundedResponse, as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(response_to_dict(response), ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+        return
+
+    print("=" * 50)
+    print("THE GROUNDED")
+    print("Policy Decision Assistant")
+    print("=" * 50)
+    print()
+    print("Question:")
+    print(response.question)
+    print()
+    print(f"STATUS: {response.status.value}")
+    print()
+    if response.answer_permitted:
+        print("ANSWER:")
+        for section in response.sections:
+            scope = []
+            if section.version:
+                scope.append(f"Version: {section.version}")
+            if section.period_start is not None or section.period_end is not None:
+                scope.append(f"Period: {section.period_start or '—'} to {section.period_end or '—'}")
+            if scope:
+                print(f"[{'; '.join(scope)}]")
+            print(section.content.strip())
+            print()
+        if response.calculation is not None:
+            _print_calculation(response.calculation)
+            print()
+        print("SOURCE:")
+        seen = set()
+        for citation in response.citations:
+            label = _citation_text(citation)
+            if label not in seen:
+                print(label)
+                seen.add(label)
+        print()
+        print("GROUNDING:")
+        print("Answer supported by authoritative policy evidence.")
+    else:
+        print("RESULT:")
+        print("The system cannot answer this question from the supplied policy evidence.")
+        print()
+        print("REASON:")
+        print(_blocking_reason(response))
+        if response.missing_facts:
+            print(f"Missing information: {', '.join(response.missing_facts)}")
+        if response.conflicts:
+            print("Conflicting provisions:")
+            _print_conflicts(response.conflicts)
+        if response.gaps:
+            print("Evidence gaps:")
+            _print_gaps(response.gaps)
+        print()
+        print("NEXT ACTION:")
+        if response.next_action:
+            print(response.next_action.replace("_", " ").capitalize())
+        else:
+            print("No answer provided.")
+    print("=" * 50)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="grounded",

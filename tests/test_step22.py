@@ -65,14 +65,18 @@ def test_public_calculation_presentation_preserves_policy_provenance():
 def test_cli_human_output_distinguishes_answer_and_blocking_reason(capsys):
     assert main(["ask", "What is the household resource limit?"]) == 0
     answered = capsys.readouterr().out
-    assert "grounded answer:" in answered
-    assert "citations:" in answered
+    assert "STATUS: ANSWERABLE" in answered
+    assert "ANSWER:" in answered
+    assert "SOURCE:" in answered
+    assert "Citation(" not in answered
 
     assert main(["ask", "What is a unicorn rule?"]) == 5
     blocked = capsys.readouterr().out
-    assert "grounded answer: [not permitted]" in blocked
-    assert "blocking reason:" in blocked
-    assert "next action: explain_insufficient_evidence" in blocked
+    assert "STATUS: INSUFFICIENT_EVIDENCE" in blocked
+    assert "RESULT:" in blocked
+    assert "REASON:" in blocked
+    assert "NEXT ACTION:" in blocked
+    assert "Citation(" not in blocked
 
 
 def test_cli_json_with_calculation_is_deterministic(capsys):
@@ -91,4 +95,3 @@ def test_cli_json_with_calculation_is_deterministic(capsys):
     payload = json.loads(first)
     assert payload["calculation"]["status"] == "CALCULATED"
     assert payload["calculation"]["calculation"]["countable_monthly_earnings"] == "325"
-
