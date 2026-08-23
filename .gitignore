@@ -4,6 +4,10 @@ __pycache__/
 .pytest_cache/
 .pytest-cache-files-*/
 pytest-cache-files-*/
+/pytest-cache-files-*/
+/.pytest-step19-temp/
+/tmp*/
+audit/
 build/
 
 # Virtual environments

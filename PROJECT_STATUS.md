@@ -1,7 +1,7 @@
 # THE GROUNDED — Project Status
 
 This is the current continuity record for THE GROUNDED. It reflects the
-repository through Step 24 and should be read before future development.
+repository through Step 25 and should be read before future development.
 
 ## 1. Identity and safety boundary
 
@@ -28,7 +28,7 @@ remain fail-closed outcomes.
 
 ## 2. Implementation status
 
-Steps 1–24 are complete as implemented/documented work:
+Steps 1–25 are complete as implemented/documented work:
 
 - Original and amendment sources remain separate, with exact provision text,
   source metadata, cross-references, and provenance preserved.
@@ -62,6 +62,9 @@ Steps 1–24 are complete as implemented/documented work:
 - Step 23 extends append-only JSONL audit records so executions include
   retrieval results, temporal decisions, evidence, decision, resolved
   provisions, answer, validation, and calculation provenance.
+- Step 25 completed final hardening: artifact reproducibility, validation and
+  tamper checks, ten-case evaluation, representative CLI demonstrations,
+  documentation consistency review, and generated-file/ignore-rule review.
 
 ## 3. Current architecture
 
@@ -148,13 +151,14 @@ policy manuals, or LLM-based policy authority.
 
 ## 8. Roadmap
 
-Step 25 is the only remaining planned step:
+Step 25 final hardening is complete. There are no additional roadmap steps:
 
 ### Step 25 — Final Hardening
 
-Perform final regression testing, clean-clone verification, artifact
-reproducibility checks, tamper testing, edge-case testing, documentation
-verification, and final project review. This has not been implemented.
+Final regression testing, artifact reproducibility checks, tamper testing,
+edge-case testing, documentation verification, and final project review are
+complete. The known Windows temporary-directory permission limitation remains
+environment-only.
 
 ## 9. Rules for future development
 
@@ -166,12 +170,14 @@ content. Do not modify authoritative source documents.
 ## 10. Repository truth
 
 ```text
-Current completed step: Step 24
-Next planned step: Step 25
+Current completed step: Step 25
+Next planned step: none
 Evaluation: 10 passed, 0 failed
 Latest full-suite result: 168 passed, 7 failed, 8 errors (Windows permissions)
 Retrieval: deterministic lexical with bounded expansion
 Calculation: monthly earnings disregard only
 Policy authority: supplied source documents
 Safety boundary: evidence + temporal applicability + decision gate + validation
+Artifact reproducibility: identical across consecutive builds
+Validation/tamper checks: passed
 ```
