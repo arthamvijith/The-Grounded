@@ -6,8 +6,9 @@ AI/Codex was used as a development assistant during the implementation of THE
 GROUNDED. Assistance was provided within explicitly defined step scopes for
 source analysis, ingestion, retrieval, temporal applicability, evidence
 assessment, question analysis, decision gating, answer generation, pipeline
-integration, public interface work, audit logging, evaluation, CLI work, and
-the Step 15 artifact/store layer.
+integration, public interface work, audit logging, evaluation, CLI work, the
+Step 15 artifact/store layer, deterministic calculation work, structured
+presentation, audit completeness, and documentation refresh.
 
 AI assistance included reading repository materials, proposing and writing
 implementation changes, adding tests and inspection scripts, reviewing
@@ -59,8 +60,8 @@ responsibility of the project operator.
 
 ## Limitations and future work
 
-AI assistance did not replace human review of policy meaning. Planned or
-architecturally discussed features such as a calculation engine,
-post-generation claim validation, a formal resolved-provision model, and a
-larger evaluation corpus should not be inferred from this document as current
+AI assistance did not replace human review of policy meaning. Features that
+remain planned or partial, such as general award calculations, unrestricted
+semantic claim validation, conversational refusal prose, packaging, and Step
+25 final hardening, should not be inferred from this document as current
 runtime capabilities.

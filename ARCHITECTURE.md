@@ -100,7 +100,7 @@ THE GROUNDED/
 │  └─ amendment/
 │     ├─ READ ME FIRST.md
 │     └─ Amendment No. 2026-01.md
-├─ src/                         # future implementation
+├─ src/                         # current implementation
 │  └─ grounded/
 │     ├─ cli.py
 │     ├─ models.py
@@ -111,7 +111,7 @@ THE GROUNDED/
 │     ├─ evidence.py
 │     ├─ answer.py
 │     └─ citations.py
-├─ tests/                       # future tests and ten-question evaluation
+├─ tests/                       # layered tests and ten-case evaluation
 ├─ ANALYSIS.md
 ├─ ARCHITECTURE.md
 ├─ DECISIONS.md                 # required project decision record
@@ -298,14 +298,18 @@ The full-time-student case must not be answered from §1.4.6 alone. The definiti
 
 ## 12. Answer generation strategy
 
-The generator receives only a validated `Decision` and evidence bundle, not the whole corpus. It must produce:
+The current generator receives the validated decision and evidence bundle, not
+the whole corpus. It produces:
 
 1. a direct answer in plain language;
 2. any required conditions, calculations, or date assumptions;
 3. citations immediately after the supported claims;
 4. a short note where the manual gives discretion rather than a guaranteed result.
 
-For calculation questions, a small deterministic calculation layer should compute thresholds, disregards, needs figures, and apportionment from resolved evidence. The language generator may explain the result, but must not perform uncited policy arithmetic or invent values.
+For the currently supported calculation question, `calculation.py` computes
+countable monthly employment earnings after the applicable disregard from
+validated resolved evidence. It does not compute general thresholds, awards,
+or period apportionment.
 
 Generation should use a constrained template or structured model prompt requiring each claim to reference an evidence-item ID. A post-generation validator rejects unsupported claims, missing citations, altered monetary values, and citations not present in the evidence bundle.
 
@@ -371,9 +375,11 @@ Testing should be layered so failures identify the unsafe component:
 - **Evidence tests:** missing facts, unsupported topics, broken references, and partial multi-question coverage.
 - **Conflict tests:** original §4.3.2/§9.1.4 and the full-time-student gap.
 - **Citation tests:** every generated claim maps to an exact clause and amendment provenance where needed.
-- **End-to-end evaluation:** the required ten-question set with expected answer/refusal status and recorded pass/fail results.
+- **End-to-end evaluation:** the implemented ten-case set with expected answer/refusal status and recorded pass/fail results.
 
-The ten-question set should include normal eligibility and calculation questions, a cross-reference case, unsupported and ambiguous questions, the known conflict, the student gap, and multiple date-transition questions. Failures must remain visible in the report.
+The ten cases include normal eligibility, paraphrase, calculation, cross-reference,
+unsupported and ambiguous questions, the known conflict, the student gap, and
+date-transition questions. Failures remain visible in the report.
 
 ## 17. Future amendment accommodation
 
@@ -433,4 +439,48 @@ These exclusions follow the brief and protect the core safety property: answers 
 
 ## Architectural conclusion
 
-The smallest safe design is a deterministic, provision-indexed pipeline with an optional language-model adapter at the edges. The critical safety decisions—date applicability, evidence sufficiency, conflict handling, and refusal—remain explicit and testable rather than being delegated to conversational generation. Separate immutable source artifacts and structured amendment rules make the system understandable today and adaptable to the next surprise amendment.
+The smallest safe design is a deterministic, provision-indexed pipeline. The
+critical safety decisions—date applicability, evidence sufficiency, conflict
+handling, refusal, and output validation—remain explicit and testable rather
+than being delegated to conversational generation. Separate immutable source
+artifacts and structured amendment rules make the system understandable today
+and adaptable to the next surprise amendment.
+
+## Current implementation status through Step 24
+
+The architecture above is the original design baseline. The following
+components are implemented in the current repository:
+
+- Step 19 strengthened lexical retrieval with bounded explicit
+  cross-reference/related-provision expansion, duplicate prevention,
+  expansion provenance, and multi-clause candidate coverage. Retrieval still
+  returns candidates only.
+- Step 20 added a deliberately small Decimal calculation for countable monthly
+  employment earnings after the applicable monthly earnings disregard. It
+  consumes validated, temporally resolved evidence and does not calculate
+  awards or period apportionment.
+- Step 21 expanded the regression corpus to ten deterministic cases and checks
+  status, answer permission, next action, provenance, and the calculation
+  result where relevant.
+- Step 22 added clearer structured public/CLI answer and blocking presentation,
+  while preserving JSON output, the decision gate, and final validation.
+- Step 23 extended the existing append-only JSONL audit record with retrieval
+  metadata, resolved provisions, answer and validation results, and optional
+  calculation provenance. Serialization is deterministic, including Decimal
+  values.
+- Step 24 refreshes documentation only.
+
+The actual current flow is:
+
+```text
+Question → QuestionSpec → LexicalRetriever
+→ TemporalApplicabilityResolver → EvidenceAnalyzer
+→ DecisionGate → ResolvedProvision projection
+→ GroundedAnswerGenerator → validation/fail-closed
+→ PublicGroundedResponse / CLI → optional complete JSONL audit
+```
+
+There is no runtime LLM, embeddings, vector database, external service,
+dedicated citation formatter module, conversational refusal generator, or
+general-purpose calculation engine. Step 25 final hardening is the only
+remaining planned step.

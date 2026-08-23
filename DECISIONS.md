@@ -1,7 +1,7 @@
 # Architectural and Implementation Decisions
 
 This document records decisions reflected in the implementation through Step
-15. It describes the rationale and trade-offs of the current design; it does
+23. It describes the rationale and trade-offs of the current design; it does
 not claim that planned features are already implemented.
 
 ## Decision: Use deterministic, offline processing
@@ -199,8 +199,8 @@ answer is an explicit evaluation failure.
 ### Consequences
 
 The evaluation output is stable and suitable for local regression checks. The
-current built-in suite contains six representative cases; a larger evaluation
-corpus remains future work.
+current built-in suite contains ten representative cases, including positive,
+negative, historical, amended, multi-clause, and calculation cases.
 
 ## Decision: Add dedicated source stores and reproducible artifacts
 
@@ -263,15 +263,74 @@ The interface is usable from scripts and PowerShell while preserving the same
 pipeline decisions. Final conversational refusal wording and a web interface
 are not part of the current implementation.
 
+## Decision: Use deterministic Decimal arithmetic for the supported calculation
+
+### Context
+
+The corpus directly supports a monthly employment-earnings disregard, but it
+does not support a general financial or award calculator.
+
+### Decision
+
+Step 20 uses Python `Decimal` arithmetic only after the existing pipeline,
+decision gate, validation, temporal resolution, and `ResolvedProvision` have
+established the applicable disregard. Missing or unsupported inputs fail
+safely.
+
+### Consequences
+
+The demonstrated calculation is reproducible and preserves policy provenance.
+Award, apportionment, and unrelated calculations remain outside the scope.
+
+## Decision: Present structured answers and refusals
+
+### Context
+
+Demonstrations and callers need readable results without adding unconstrained
+conversational generation.
+
+### Decision
+
+The public interface and CLI expose exact grounded sections, citations,
+provenance, calculation details, blocking status, structured reasons, and next
+actions. They never turn a blocked decision into an answer.
+
+### Consequences
+
+Results are easier to inspect while the decision gate and final validation
+remain authoritative. Conversational refusal prose is still not generated.
+
+## Decision: Make audit records reconstructive and append-only
+
+### Context
+
+An execution should be explainable across every existing pipeline stage,
+including a blocked result and any supported calculation.
+
+### Decision
+
+Step 23 extends the existing JSONL record with retrieval metadata, resolved
+provisions, answer and validation results, and calculation provenance. The
+canonical serializer handles enums, dates, dataclasses, and `Decimal` values;
+execution IDs remain deterministic hashes of record content.
+
+### Consequences
+
+One local record can reconstruct the execution without a database or second
+logging mechanism. Records are larger and local retention remains an operator
+responsibility.
+
 ## Explicitly deferred work
 
 The following architecture ideas are not claimed as implemented by this
 record:
 
-- a calculation engine for policy arithmetic and apportionment;
-- a separate post-generation claim/citation validator;
-- a formal `ResolvedProvision` model;
+- a general calculation engine for award arithmetic and period apportionment;
+- unrestricted semantic post-generation claim validation;
 - a dedicated citation formatter module;
-- a ten-question evaluation corpus;
-- `DECISIONS.md` and `AI-USAGE.md` were added in Step 16 as documentation
-  artifacts and do not add runtime behavior.
+- conversational refusal prose;
+- packaging, web UI, database/service deployment, and runtime LLM integration;
+- Step 25 final hardening and clean-clone verification.
+
+`DECISIONS.md` and `AI-USAGE.md` are documentation artifacts and do not add
+runtime behavior.

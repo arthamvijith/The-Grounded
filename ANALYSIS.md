@@ -97,8 +97,22 @@ Refusals should cite the relevant clauses showing the gap or conflict and direct
 
 ## Evaluation implications
 
-The eventual ten-question test set should cover ordinary eligibility, resource exclusions, income/disregards, award calculation, deadlines, amendment transitions, the §4.3.2/§9.1.4 history, the full-time-student cross-reference gap, and at least one deliberate refusal. Results must report failures rather than selecting only easy passing questions.
+The following paragraph records the original evaluation intent. That intent is
+now implemented by the ten-case deterministic corpus described in
+`PROJECT_STATUS.md` and `README.md`.
 
-## Implementation deliberately not started
+The implemented ten-case evaluation corpus covers ordinary eligibility,
+paraphrase retrieval, missing facts, historical and amended dates, the
+reporting conflict, the full-time-student cross-reference gap, unsupported
+questions, multi-clause retrieval, and the supported earnings calculation.
+Results report failures rather than selecting only easy passing questions.
 
-No application code, indexing pipeline, retrieval logic, answer generator, tests, or other implementation artifacts were created in this step. Per instruction, work stops after this analysis document.
+## Implementation status note
+
+This document is the original requirements analysis and is retained as a
+historical design input. The implementation now includes ingestion, offline
+artifacts, deterministic retrieval and calculation, temporal/evidence/decision
+layers, structured answers and validation, a ten-case evaluation corpus, and
+complete append-only audit reconstruction through Step 23. Later roadmap work
+is recorded in `PROJECT_STATUS.md`; this historical analysis is not itself a
+runtime specification for unimplemented features.

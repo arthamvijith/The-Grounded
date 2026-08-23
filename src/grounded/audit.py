@@ -6,6 +6,7 @@ import hashlib
 import json
 from dataclasses import dataclass, fields, is_dataclass
 from datetime import date, datetime
+from decimal import Decimal
 from enum import Enum
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
@@ -24,6 +25,8 @@ def _json_value(value: Any) -> Any:
         return value.value
     if isinstance(value, (date, datetime)):
         return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
     if is_dataclass(value):
         return {field.name: _json_value(getattr(value, field.name)) for field in fields(value)}
     if isinstance(value, dict):
@@ -66,11 +69,16 @@ class AuditRecord:
     temporal_decisions: Any
     evidence_assessment: Any
     decision_result: Any
+    retrieval_results: Any = ()
+    resolved_provisions: Any = ()
+    answer_result: Any = None
+    validation_result: Any = None
+    calculation: Any = None
 
     @classmethod
     def from_execution(cls, pipeline_result: PipelineResult, response: PublicGroundedResponse) -> "AuditRecord":
         payload = {
-            "schema_version": 1,
+            "schema_version": 2,
             "question": pipeline_result.question,
             "status": response.status,
             "answer_permitted": response.answer_permitted,
@@ -88,6 +96,11 @@ class AuditRecord:
             "temporal_decisions": pipeline_result.temporal_decisions,
             "evidence_assessment": pipeline_result.evidence_assessment,
             "decision_result": pipeline_result.decision,
+            "retrieval_results": pipeline_result.retrieval_results,
+            "resolved_provisions": pipeline_result.resolved_provisions,
+            "answer_result": pipeline_result.answer,
+            "validation_result": pipeline_result.validation,
+            "calculation": response.calculation,
         }
         canonical = json.dumps(_json_value(payload), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         execution_id = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -120,12 +133,19 @@ class AuditLogger:
         self.path = Path(path)
         self.pipeline = pipeline
 
-    def record_question(self, question: str) -> AuditedExecution:
+    def record_question(
+        self,
+        question: str,
+        gross_monthly_earnings: str | int | None = None,
+    ) -> AuditedExecution:
         from .pipeline import GroundedPipeline
 
         pipeline = self.pipeline or GroundedPipeline()
         pipeline_result = pipeline.run(question)
-        response = GroundedPublicInterface(_SingleResultPipeline(pipeline_result)).answer_question(question)
+        response = GroundedPublicInterface(_SingleResultPipeline(pipeline_result)).answer_question(
+            question,
+            gross_monthly_earnings,
+        )
         record = AuditRecord.from_execution(pipeline_result, response)
         self.append(record)
         return AuditedExecution(response=response, record=record)
@@ -147,7 +167,8 @@ def record_execution(
     question: str,
     path: str | Path,
     pipeline: GroundedPipeline | None = None,
+    gross_monthly_earnings: str | int | None = None,
 ) -> AuditedExecution:
     """Run one question through the existing public interface and audit it."""
 
-    return AuditLogger(path, pipeline).record_question(question)
+    return AuditLogger(path, pipeline).record_question(question, gross_monthly_earnings)

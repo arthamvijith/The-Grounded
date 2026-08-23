@@ -142,7 +142,11 @@ def _run_ask(args: argparse.Namespace) -> int:
             args.gross_monthly_earnings,
         )
     else:
-        response = AuditLogger(args.audit, pipeline).record_question(args.question).response
+        logger = AuditLogger(args.audit, pipeline)
+        if args.gross_monthly_earnings is None:
+            response = logger.record_question(args.question).response
+        else:
+            response = logger.record_question(args.question, args.gross_monthly_earnings).response
     _print_response(response, args.json)
     return EXIT_OK if response.status is DecisionStatus.ANSWERABLE else EXIT_STATUS_CODES[response.status]
 

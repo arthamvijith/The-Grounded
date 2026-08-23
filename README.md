@@ -1,35 +1,47 @@
 # THE GROUNDED
 
-THE GROUNDED is a deterministic, policy-evidence-based system. It answers
-only when the existing retrieval, temporal, evidence, and decision layers
-permit an answer.
+THE GROUNDED is a deterministic, offline, policy-evidence-based grounded RAG
+system and policy decision aid. It answers only when supplied policy evidence
+is applicable, authoritative, sufficient, and validated. Retrieval alone never
+authorizes an answer.
 
-## Command-line interface
+## Runtime flow
 
-Run the CLI from the repository root with the included launcher:
+```text
+Question → retrieval → temporal applicability → evidence
+→ decision gate → ResolvedProvision → grounded answer/refusal
+→ output validation → public/CLI result → optional audit
+```
+
+The original policy manual and amendments remain separate authoritative source
+artifacts. The system does not use an LLM, network service, database,
+embeddings, or vector search at runtime.
+
+## Quick start
+
+From the repository root in Windows PowerShell:
 
 ```powershell
 python scripts\grounded.py ask "What is the household resource limit?"
-```
-
-The CLI uses the existing public interface and prints structured human-readable
-output. Use `--json` for deterministic machine-readable output:
-
-```powershell
 python scripts\grounded.py ask "What is a unicorn rule?" --json
 ```
 
-Non-answerable outcomes have distinct exit codes. An answerable question exits
-with `0`; clarification, conflict, broken cross-reference, insufficient
-evidence, and out-of-scope results exit with `2`, `3`, `4`, `5`, and `6`.
+Blocked results have distinct exit codes: clarification `2`, conflict `3`,
+broken cross-reference `4`, insufficient evidence `5`, and out of scope `6`.
+Answerable results exit `0`.
 
-To append an execution to the existing local JSONL audit log:
+For the supported earnings calculation, provide the gross amount explicitly:
 
 ```powershell
-python scripts\grounded.py ask "What is the $175 earnings disregard for a determination on 1 April 2026?" --audit audit\executions.jsonl
+python scripts\grounded.py ask 'What is the $175 earnings disregard for a determination on 1 April 2026?' --gross-monthly-earnings 500
 ```
 
-Run the deterministic regression suite with:
+This uses the applicable policy disregard and reports the countable monthly
+amount with amendment provenance. It is not a general-purpose calculator.
+
+## Evaluation and audit
+
+The deterministic regression suite contains ten cases:
 
 ```powershell
 python scripts\grounded.py evaluate
@@ -37,24 +49,35 @@ python scripts\grounded.py evaluate --json
 python scripts\grounded.py evaluate --audit audit\evaluation.jsonl
 ```
 
-Build reproducible offline source and search artifacts with:
+Record one execution in append-only JSONL, including complete pipeline-stage
+information:
+
+```powershell
+python scripts\grounded.py ask "What is the household resource limit?" --audit audit\executions.jsonl
+python -X utf8 scripts\inspect_audit.py
+```
+
+## Offline artifacts
+
+Build and inspect reproducible source-derived artifacts:
 
 ```powershell
 python scripts\build_artifacts.py
-```
-
-The default output is `build\artifacts`. Load those artifacts at runtime with:
-
-```powershell
+python scripts\inspect_artifacts.py
 python scripts\grounded.py ask "What is the household resource limit?" --artifacts build\artifacts
 ```
 
-Inspect the build/load equivalence and amendment integrity validation with:
+## Validation and tests
 
 ```powershell
-python scripts\inspect_artifacts.py
+python -X utf8 scripts\inspect_validation.py
+python -m pytest tests -q -p no:cacheprovider
 ```
 
-The evaluation command exits `0` when all cases pass and `11` when a
-regression case fails. Use `python scripts\grounded.py --help` and
-`python scripts\grounded.py ask --help` for concise usage information.
+Validation is the final safety boundary before public/CLI exposure. Invalid
+citations, altered source excerpts, mismatched provenance, unresolved
+conflicts, missing required facts, and broken authority remain non-answerable
+outcomes. The current environment may report Windows temporary-directory
+`PermissionError` / `WinError 5` failures in audit and artifact tests; these are
+test-environment cleanup limitations, not an instruction to weaken assertions
+or policy safeguards.
