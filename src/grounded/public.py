@@ -6,6 +6,7 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 from .answer import AnswerSection, Citation
+from .calculation import CalculationResult, calculate_monthly_earnings_after_disregard
 from .decision import DecisionStatus
 
 if TYPE_CHECKING:
@@ -28,6 +29,8 @@ class PublicGroundedResponse:
     gaps: tuple[object, ...]
     refusal_reason: str | None
     next_action: str | None
+    warnings: tuple[str, ...] = ()
+    calculation: CalculationResult | None = None
 
 
 class GroundedPublicInterface:
@@ -40,11 +43,20 @@ class GroundedPublicInterface:
             pipeline = GroundedPipeline()
         self.pipeline = pipeline
 
-    def answer_question(self, question: str) -> PublicGroundedResponse:
+    def answer_question(
+        self,
+        question: str,
+        gross_monthly_earnings: str | int | None = None,
+    ) -> PublicGroundedResponse:
         """Run one question and expose only the structured grounded result."""
 
         result = self.pipeline.run(question)
         answer = result.final_answer
+        calculation = (
+            calculate_monthly_earnings_after_disregard(result, gross_monthly_earnings)
+            if gross_monthly_earnings is not None
+            else None
+        )
 
         # Keep the Step 8 decision authoritative even if a future answer-layer
         # implementation accidentally returns an inconsistent object.
@@ -74,13 +86,16 @@ class GroundedPublicInterface:
             gaps=answer.gaps,
             refusal_reason=answer.refusal_reason,
             next_action=answer.next_action,
+            warnings=answer.warnings,
+            calculation=calculation,
         )
 
 
 def answer_question(
     question: str,
     pipeline: GroundedPipeline | None = None,
+    gross_monthly_earnings: str | int | None = None,
 ) -> PublicGroundedResponse:
     """Convenience function for callers that do not need a persistent interface."""
 
-    return GroundedPublicInterface(pipeline).answer_question(question)
+    return GroundedPublicInterface(pipeline).answer_question(question, gross_monthly_earnings)

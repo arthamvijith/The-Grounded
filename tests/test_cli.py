@@ -65,8 +65,8 @@ def test_evaluation_command_passes(capsys):
     code, output, error = run_cli("evaluate", capsys=capsys)
     assert code == 0
     assert error == ""
-    assert "total cases: 6" in output
-    assert "passed: 6" in output
+    assert "total cases: 10" in output
+    assert "passed: 10" in output
     assert "failed: 0" in output
 
 

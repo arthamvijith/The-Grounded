@@ -7,6 +7,7 @@ import json
 import sys
 from dataclasses import fields, is_dataclass
 from datetime import date, datetime
+from decimal import Decimal
 from enum import Enum
 from pathlib import Path
 from typing import Any, Sequence
@@ -37,6 +38,8 @@ def _json_value(value: Any) -> Any:
         return value.value
     if isinstance(value, (date, datetime)):
         return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
     if is_dataclass(value):
         return {field.name: _json_value(getattr(value, field.name)) for field in fields(value)}
     if isinstance(value, dict):
@@ -56,6 +59,24 @@ def response_to_dict(response: PublicGroundedResponse) -> dict[str, Any]:
     return _json_value(response)
 
 
+def _print_calculation(calculation: Any) -> None:
+    print(f"calculation status: {calculation.status.value}")
+    if calculation.calculation is None:
+        print(f"calculation reason: {calculation.reason}")
+        print(f"calculation missing inputs: {calculation.missing_inputs}")
+        return
+    calculated = calculation.calculation
+    provenance = calculated.provenance
+    print(f"calculation gross monthly earnings: {calculated.gross_monthly_earnings}")
+    print(f"calculation disregard: {calculated.disregard}")
+    print(f"calculation countable monthly earnings: {calculated.countable_monthly_earnings}")
+    print(
+        "calculation provenance: "
+        f"{provenance.provision_id}, version={provenance.version}, "
+        f"amendment={provenance.amendment_id} §{provenance.amendment_paragraph}"
+    )
+
+
 def _print_response(response: PublicGroundedResponse, as_json: bool) -> None:
     if as_json:
         print(json.dumps(response_to_dict(response), ensure_ascii=False, sort_keys=True, separators=(",", ":")))
@@ -64,15 +85,29 @@ def _print_response(response: PublicGroundedResponse, as_json: bool) -> None:
     print(f"question: {response.question}")
     print(f"status: {response.status.value}")
     print(f"answer permitted: {response.answer_permitted}")
-    print(f"answer sections: {response.sections}")
-    print(f"citations: {response.citations}")
+    if response.answer_permitted:
+        print("grounded answer:")
+        for section in response.sections:
+            scope = []
+            if section.version:
+                scope.append(f"version={section.version}")
+            if section.period_start is not None or section.period_end is not None:
+                scope.append(f"period={section.period_start}/{section.period_end}")
+            suffix = f" ({', '.join(scope)})" if scope else ""
+            print(f"  {section.section_id}{suffix}: {section.content}")
+            print(f"    citations: {section.citations}")
+        if response.calculation is not None:
+            _print_calculation(response.calculation)
+    else:
+        print("grounded answer: [not permitted]")
+        print(f"blocking reason: {response.refusal_reason}")
+        print(f"missing facts: {response.missing_facts}")
+        print(f"conflicts: {response.conflicts}")
+        print(f"gaps: {response.gaps}")
+        print(f"next action: {response.next_action}")
     print(f"source provisions: {response.source_provisions}")
     print(f"source amendments: {response.source_amendments}")
-    print(f"missing facts: {response.missing_facts}")
-    print(f"conflicts: {response.conflicts}")
-    print(f"gaps: {response.gaps}")
-    print(f"refusal reason: {response.refusal_reason}")
-    print(f"next action: {response.next_action}")
+    print(f"citations: {response.citations}")
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -87,6 +122,10 @@ def _build_parser() -> argparse.ArgumentParser:
     ask.add_argument("--json", action="store_true", help="print one deterministic JSON response")
     ask.add_argument("--audit", type=Path, help="append the execution to a local JSONL audit file")
     ask.add_argument("--artifacts", type=Path, help="load provisions, amendments, and index from an artifact directory")
+    ask.add_argument(
+        "--gross-monthly-earnings",
+        help="optional gross amount for the supported earnings-disregard calculation",
+    )
 
     evaluate = subparsers.add_parser("evaluate", help="run the deterministic regression suite")
     evaluate.add_argument("--json", action="store_true", help="print the evaluation report as JSON")
@@ -98,7 +137,10 @@ def _build_parser() -> argparse.ArgumentParser:
 def _run_ask(args: argparse.Namespace) -> int:
     pipeline = GroundedPipeline(artifact_root=args.artifacts) if args.artifacts is not None else None
     if args.audit is None:
-        response = GroundedPublicInterface(pipeline).answer_question(args.question)
+        response = GroundedPublicInterface(pipeline).answer_question(
+            args.question,
+            args.gross_monthly_earnings,
+        )
     else:
         response = AuditLogger(args.audit, pipeline).record_question(args.question).response
     _print_response(response, args.json)

@@ -4,6 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from grounded.decision import DecisionStatus
+from grounded.calculation import CalculationStatus
 from grounded.evaluation import (
     EvaluationCase,
     GroundedEvaluator,
@@ -17,7 +18,7 @@ EVALUATOR = GroundedEvaluator(GroundedPublicInterface())
 
 def test_default_regression_cases_are_present_and_pass():
     report = EVALUATOR.run()
-    assert report.total == 6
+    assert report.total == 10
     assert report.all_passed
     assert report.failed == 0
 
@@ -76,4 +77,29 @@ def test_evaluation_order_and_results_are_deterministic():
         "broken-student-cross-reference",
         "unsupported-unicorn-rule",
         "amended-earnings-disregard",
+        "paraphrased-household-resources",
+        "historical-original-earnings-disregard",
+        "multi-clause-resource-and-earnings",
+        "calculated-amended-earnings",
     ]
+
+
+def test_expanded_cases_check_original_and_multi_clause_coverage():
+    report = EVALUATOR.run()
+    historical = next(item for item in report.results if item.case_id == "historical-original-earnings-disregard")
+    multi_clause = next(item for item in report.results if item.case_id == "multi-clause-resource-and-earnings")
+    assert historical.passed
+    assert historical.answer_permitted
+    assert historical.response.source_amendments == ()
+    assert multi_clause.passed
+    assert len(multi_clause.response.sections) > 1
+
+
+def test_expanded_calculation_case_checks_structured_result_and_provenance():
+    result = next(item for item in EVALUATOR.run().results if item.case_id == "calculated-amended-earnings")
+    assert result.passed
+    assert result.calculation is not None
+    assert result.calculation.status is CalculationStatus.CALCULATED
+    assert result.calculation.calculation.countable_monthly_earnings == 325
+    assert result.calculation.calculation.provenance.amendment_id == "2026-01"
+    assert result.calculation.calculation.provenance.amendment_paragraph == "1.1"
