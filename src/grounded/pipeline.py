@@ -18,6 +18,7 @@ from .retrieval import LexicalRetriever, RetrievalResult
 from .resolved import ResolvedProvision, project_resolved_provisions
 from .store import load_artifacts
 from .temporal import ApplicabilityDecision, ApplicabilityStatus, TemporalApplicabilityResolver
+from .validation import ValidationResult, fail_closed_answer, validate_answer
 
 
 @dataclass(frozen=True)
@@ -32,6 +33,7 @@ class PipelineResult:
     decision: DecisionResult
     answer: AnswerResult
     resolved_provisions: tuple[ResolvedProvision, ...] = ()
+    validation: ValidationResult | None = None
 
     @property
     def final_answer(self) -> AnswerResult:
@@ -107,17 +109,28 @@ class GroundedPipeline:
             gate_temporal_decisions,
             retrieval_results,
         )
+        # Project the already-resolved temporal result before answer
+        # generation.  This is a projection only; it does not re-run or
+        # duplicate temporal applicability rules.
+        resolved_provisions = project_resolved_provisions(
+            temporal_decisions,
+            self.provisions,
+            self.amendments,
+        )
         answer = self.answer_generator.generate(
             gate_question,
             decision,
             evidence,
             temporal_decisions,
         )
-        resolved_provisions = project_resolved_provisions(
+        validation = validate_answer(
+            answer,
+            decision,
+            evidence,
             temporal_decisions,
-            self.provisions,
-            self.amendments,
+            resolved_provisions,
         )
+        answer = fail_closed_answer(answer, decision, validation)
         return PipelineResult(
             question=question,
             question_spec=question_spec,
@@ -127,6 +140,7 @@ class GroundedPipeline:
             decision=decision,
             answer=answer,
             resolved_provisions=resolved_provisions,
+            validation=validation,
         )
 
     def _resolve_retrieved_provisions(
