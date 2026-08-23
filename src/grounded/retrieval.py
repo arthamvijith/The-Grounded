@@ -37,6 +37,23 @@ class RetrievalResult:
     matched_signals: tuple[str, ...]
     rank: int
     cross_references: tuple[str, ...] = ()
+    retrieval_kind: str = "direct"
+    expanded_from: str | None = None
+    expansion_reason: str | None = None
+    expansion_depth: int = 0
+
+
+@dataclass(frozen=True)
+class _Candidate:
+    score: float
+    index: int
+    item: _IndexedRecord
+    matched_terms: tuple[str, ...]
+    matched_signals: tuple[str, ...]
+    retrieval_kind: str = "direct"
+    expanded_from: str | None = None
+    expansion_reason: str | None = None
+    expansion_depth: int = 0
 
 
 @dataclass(frozen=True)
@@ -226,17 +243,116 @@ class LexicalRetriever:
             scored.append((score, index, item, matched_terms, tuple(signals)))
 
         scored.sort(key=lambda entry: (-entry[0], entry[1]))
+        return self._finalize_results(scored, query, top_k)
+
+    def _finalize_results(self, scored, query: str, top_k: int) -> list[RetrievalResult]:
+        """Add bounded one-hop related candidates and return stable results."""
+
+        direct = [
+            _Candidate(score, index, item, terms, signals)
+            for score, index, item, terms, signals in scored
+        ]
+        direct_keys = {self._record_key(candidate.item.record) for candidate in direct}
+        candidates = list(direct)
+        seen_keys = set(direct_keys)
+
+        index_by_target: dict[str, list[tuple[int, _IndexedRecord]]] = {}
+        for index, item in enumerate(self._records):
+            index_by_target.setdefault(self._record_label(item.record), []).append((index, item))
+
+        # Only direct lexical hits are expansion seeds. This is a bounded
+        # one-hop traversal and therefore cannot recurse through a reference
+        # chain or cycle.
+        seed_limit = max(top_k * 2, 10)
+        for seed in direct[:seed_limit]:
+            for target in seed.item.cross_references:
+                for index, item in index_by_target.get(target, ()):
+                    key = self._record_key(item.record)
+                    if key in seen_keys:
+                        continue
+                    seen_keys.add(key)
+                    candidates.append(_Candidate(
+                        score=1.0,
+                        index=index,
+                        item=item,
+                        matched_terms=(),
+                        matched_signals=("explicit_cross_reference",),
+                        retrieval_kind="cross_reference",
+                        expanded_from=self._record_label(seed.item.record),
+                        expansion_reason=f"explicit_cross_reference:{target}",
+                        expansion_depth=1,
+                    ))
+
+        candidates.sort(key=lambda candidate: (-candidate.score, candidate.index))
+        selected = self._select_clause_coverage(candidates, query, top_k)
         return [
             RetrievalResult(
-                record=item.record,
-                relevance_score=score,
-                matched_terms=terms,
-                matched_signals=signals,
+                record=candidate.item.record,
+                relevance_score=candidate.score,
+                matched_terms=candidate.matched_terms,
+                matched_signals=candidate.matched_signals,
                 rank=rank,
-                cross_references=item.cross_references,
+                cross_references=candidate.item.cross_references,
+                retrieval_kind=candidate.retrieval_kind,
+                expanded_from=candidate.expanded_from,
+                expansion_reason=candidate.expansion_reason,
+                expansion_depth=candidate.expansion_depth,
             )
-            for rank, (score, _, item, terms, signals) in enumerate(scored[:top_k], start=1)
+            for rank, candidate in enumerate(selected, start=1)
         ]
+
+    @staticmethod
+    def _record_label(record: PolicyRecord) -> str:
+        return record.provision_no if isinstance(record, ProvisionRecord) else record.target_provision
+
+    @staticmethod
+    def _query_clauses(query: str) -> tuple[frozenset[str], ...]:
+        parts = tuple(
+            part.strip()
+            for part in re.split(r"(?:;|\band\b|\balso\b)", query, flags=re.IGNORECASE)
+            if part.strip()
+        )
+        clauses = tuple(frozenset(tokenize(part)) for part in parts)
+        return tuple(clause for clause in clauses if clause)
+
+    @classmethod
+    def _select_clause_coverage(
+        cls,
+        candidates: list[_Candidate],
+        query: str,
+        top_k: int,
+    ) -> list[_Candidate]:
+        clauses = cls._query_clauses(query)
+        if len(clauses) <= 1:
+            return candidates[:top_k]
+
+        protected: list[_Candidate] = []
+        protected_keys: set[str] = set()
+        for clause in clauses:
+            matching = [
+                candidate for candidate in candidates
+                if clause.intersection(candidate.matched_terms)
+                and candidate.retrieval_kind == "direct"
+            ]
+            if not matching:
+                continue
+            best = matching[0]
+            key = cls._record_key(best.item.record)
+            if key not in protected_keys:
+                protected.append(best)
+                protected_keys.add(key)
+
+        ordered = protected + [
+            candidate for candidate in candidates
+            if cls._record_key(candidate.item.record) not in protected_keys
+        ]
+        return ordered[:top_k]
+
+    @staticmethod
+    def _record_key(record: PolicyRecord) -> str:
+        if isinstance(record, ProvisionRecord):
+            return f"provision:{record.provision_no}"
+        return f"amendment:{record.amendment_id}:{record.amendment_paragraph}"
 
 
 def retrieve(
