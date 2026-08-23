@@ -109,7 +109,7 @@ python -m pytest tests -q -p no:cacheprovider
 Latest observed result:
 
 ```text
-168 passed, 7 failed, 8 errors
+170 passed, 7 failed, 8 errors
 ```
 
 The seven failures and eight errors are Windows `PermissionError` / `WinError
@@ -173,7 +173,7 @@ content. Do not modify authoritative source documents.
 Current completed step: Step 25
 Next planned step: none
 Evaluation: 10 passed, 0 failed
-Latest full-suite result: 168 passed, 7 failed, 8 errors (Windows permissions)
+Latest full-suite result: 170 passed, 7 failed, 8 errors (Windows permissions)
 Retrieval: deterministic lexical with bounded expansion
 Calculation: monthly earnings disregard only
 Policy authority: supplied source documents
