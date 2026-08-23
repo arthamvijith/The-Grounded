@@ -15,6 +15,7 @@ from .ingest import parse_policy_manual
 from .models import AmendmentRecord, ProvisionRecord
 from .question import QuestionSpec, analyze_question
 from .retrieval import LexicalRetriever, RetrievalResult
+from .resolved import ResolvedProvision, project_resolved_provisions
 from .store import load_artifacts
 from .temporal import ApplicabilityDecision, ApplicabilityStatus, TemporalApplicabilityResolver
 
@@ -30,6 +31,7 @@ class PipelineResult:
     evidence_assessment: EvidenceAssessment
     decision: DecisionResult
     answer: AnswerResult
+    resolved_provisions: tuple[ResolvedProvision, ...] = ()
 
     @property
     def final_answer(self) -> AnswerResult:
@@ -111,6 +113,11 @@ class GroundedPipeline:
             evidence,
             temporal_decisions,
         )
+        resolved_provisions = project_resolved_provisions(
+            temporal_decisions,
+            self.provisions,
+            self.amendments,
+        )
         return PipelineResult(
             question=question,
             question_spec=question_spec,
@@ -119,6 +126,7 @@ class GroundedPipeline:
             evidence_assessment=evidence,
             decision=decision,
             answer=answer,
+            resolved_provisions=resolved_provisions,
         )
 
     def _resolve_retrieved_provisions(
