@@ -167,6 +167,21 @@ def _blocking_reason(response: PublicGroundedResponse) -> str:
     return reasons.get(response.status, response.refusal_reason or response.status.value)
 
 
+def _next_action_text(response: PublicGroundedResponse) -> str:
+    actions = {
+        "explain_insufficient_evidence": "Ask a supervisor or the Department for guidance.",
+        "request_missing_facts": "Provide the missing determination date and ask again.",
+        "escalate_conflict": (
+            "Escalate to a supervisor or the Department; do not choose between the conflicting clauses."
+        ),
+        "explain_broken_cross_reference": (
+            "Ask a supervisor or the Department to clarify the broken cross-reference; "
+            "do not infer the missing rule."
+        ),
+    }
+    return actions.get(response.next_action, response.next_action or "No answer provided.")
+
+
 def _print_conflicts(conflicts: Sequence[Any]) -> None:
     for conflict in conflicts:
         provision_ids = getattr(conflict, "provision_ids", ())
@@ -238,10 +253,7 @@ def _print_response(response: PublicGroundedResponse, as_json: bool) -> None:
             _print_gaps(response.gaps)
         print()
         print("NEXT ACTION:")
-        if response.next_action:
-            print(response.next_action.replace("_", " ").capitalize())
-        else:
-            print("No answer provided.")
+        print(_next_action_text(response))
     print("=" * 50)
 
 

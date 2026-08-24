@@ -58,10 +58,12 @@ data processor. Local audit files may contain execution information when a
 caller explicitly enables audit logging; their handling remains the
 responsibility of the project operator.
 
-## Limitations and future work
+## Limitations
 
 AI assistance did not replace human review of policy meaning. Features that
 remain planned or partial, such as general award calculations, unrestricted
-semantic claim validation, conversational refusal prose, packaging, and Step
-25 final hardening, should not be inferred from this document as current
-runtime capabilities.
+semantic claim validation, conversational refusal prose, and packaging should
+not be inferred from this document as current runtime capabilities. Step 25
+final hardening and final repository verification are complete; the known
+Windows temporary-directory permission limitation remains an environment
+constraint rather than an application capability.

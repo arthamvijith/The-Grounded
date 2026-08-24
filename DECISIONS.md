@@ -1,8 +1,10 @@
 # Architectural and Implementation Decisions
 
 This document records decisions reflected in the implementation through Step
-23. It describes the rationale and trade-offs of the current design; it does
-not claim that planned features are already implemented.
+25. It describes the rationale and trade-offs of the current design; it does
+not claim that deferred capabilities are already implemented. Step 25 final
+hardening and the final repository verification are complete, subject to the
+documented Windows temporary-directory permission limitation.
 
 ## Decision: Use deterministic, offline processing
 
@@ -330,7 +332,5 @@ record:
 - a dedicated citation formatter module;
 - conversational refusal prose;
 - packaging, web UI, database/service deployment, and runtime LLM integration;
-- Step 25 final hardening and clean-clone verification.
-
 `DECISIONS.md` and `AI-USAGE.md` are documentation artifacts and do not add
 runtime behavior.
