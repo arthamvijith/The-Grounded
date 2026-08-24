@@ -48,6 +48,40 @@ Historical and amended evidence can be distinguished and cited. Consumers must
 carry both stores and use the temporal resolver rather than assuming that the
 latest amendment applies globally.
 
+## Decision: Accommodate the Day-2 Surprise Challenge without rewriting the system
+
+### Context
+
+The Day-2 Surprise Challenge introduced Amendment No. 2026-01, effective 1
+March 2026. It changed the earnings disregard from $120 to $175, aligned the
+two reporting periods to 14 calendar days, replaced the income-threshold table,
+changed the sanction percentage from 20 per cent to 15 per cent, and inserted
+§10.5.3A. The amendment also made applicability depend on determination dates,
+change-of-circumstances dates, and periods spanning the effective date.
+
+### Decision
+
+Keep the original manual and amendment as separate source artifacts and
+represent amendment operations separately. Resolve temporal applicability
+before answering using the relevant determination or change date, including
+per-day treatment for periods spanning 1 March 2026. If the required date is
+missing or the applicable authority cannot be safely resolved, refuse or
+request clarification. This extends the existing retrieval, evidence, and
+decision stages rather than rewriting the system.
+
+We deliberately did not rewrite or merge the original manual, replace the
+deterministic architecture with an LLM, introduce a network service, database,
+vector store, or unnecessary infrastructure, or replace the retrieval and
+decision architecture merely because the requirement changed.
+
+### Consequences
+
+The Day-2 change can be incorporated while preserving historical policy text,
+amendment provenance, and the existing refusal boundary. With more time, the
+temporal policy model and amendment rules could be made even easier to extend
+and explain, while keeping the same separation between original policy,
+amendments, and the decision gate.
+
 ## Decision: Separate retrieval from the decision gate
 
 ### Context
