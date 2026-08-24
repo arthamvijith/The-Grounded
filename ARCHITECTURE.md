@@ -482,5 +482,5 @@ Question → QuestionSpec → LexicalRetriever
 
 There is no runtime LLM, embeddings, vector database, external service,
 dedicated citation formatter module, conversational refusal generator, or
-general-purpose calculation engine. Step 25 final hardening is the only
-remaining planned step.
+general-purpose calculation engine. Step 25 final hardening is complete. No
+additional roadmap steps are currently planned.
