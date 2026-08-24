@@ -1,0 +1,182 @@
+[
+  {
+    "amendment_id": "2026-01",
+    "amendment_paragraph": "1.1",
+    "applicability": [
+      {
+        "change_on_or_after": null,
+        "covered_period_rule": null,
+        "determination_on_or_after": "2026-03-01",
+        "raw_text": "Paragraph 5.1: applies to determinations on or after the amendment effective date.",
+        "source_paragraph": "1.1"
+      },
+      {
+        "change_on_or_after": null,
+        "covered_period_rule": "Apply figures in force on each day of a period spanning the effective date and apportion.",
+        "determination_on_or_after": null,
+        "raw_text": "**5.3** Where a claim relates to a period spanning 1 March 2026, the applicable figures are those in force on each day of the period, and the award is apportioned accordingly under §7.4.3.\n\n---\n\n*End of Amendment No. 2026-01.*",
+        "source_paragraph": "5.3"
+      }
+    ],
+    "effective_on": "2026-03-01",
+    "insertion_after": null,
+    "issued_on": "2026-02-12",
+    "new_text": "$175 per month",
+    "old_text": "$120 per month",
+    "operation": "substitute",
+    "source_document": "source/amendment/Amendment No. 2026-01.md",
+    "source_end": 399,
+    "source_start": 277,
+    "target_provision": "§6.4.1"
+  },
+  {
+    "amendment_id": "2026-01",
+    "amendment_paragraph": "2.1",
+    "applicability": [
+      {
+        "change_on_or_after": "2026-03-01",
+        "covered_period_rule": null,
+        "determination_on_or_after": null,
+        "raw_text": "Paragraph 5.2: applies only to changes occurring on or after the amendment effective date.",
+        "source_paragraph": "2.1"
+      },
+      {
+        "change_on_or_after": null,
+        "covered_period_rule": "Apply figures in force on each day of a period spanning the effective date and apportion.",
+        "determination_on_or_after": null,
+        "raw_text": "**5.3** Where a claim relates to a period spanning 1 March 2026, the applicable figures are those in force on each day of the period, and the award is apportioned accordingly under §7.4.3.\n\n---\n\n*End of Amendment No. 2026-01.*",
+        "source_paragraph": "5.3"
+      }
+    ],
+    "effective_on": "2026-03-01",
+    "insertion_after": null,
+    "issued_on": "2026-02-12",
+    "new_text": "14 calendar days",
+    "old_text": "10 calendar days",
+    "operation": "substitute",
+    "source_document": "source/amendment/Amendment No. 2026-01.md",
+    "source_end": 510,
+    "source_start": 399,
+    "target_provision": "§4.3.2"
+  },
+  {
+    "amendment_id": "2026-01",
+    "amendment_paragraph": "2.2",
+    "applicability": [
+      {
+        "change_on_or_after": "2026-03-01",
+        "covered_period_rule": null,
+        "determination_on_or_after": null,
+        "raw_text": "Paragraph 5.2: applies only to changes occurring on or after the amendment effective date.",
+        "source_paragraph": "2.2"
+      },
+      {
+        "change_on_or_after": null,
+        "covered_period_rule": "Apply figures in force on each day of a period spanning the effective date and apportion.",
+        "determination_on_or_after": null,
+        "raw_text": "**5.3** Where a claim relates to a period spanning 1 March 2026, the applicable figures are those in force on each day of the period, and the award is apportioned accordingly under §7.4.3.\n\n---\n\n*End of Amendment No. 2026-01.*",
+        "source_paragraph": "5.3"
+      }
+    ],
+    "effective_on": "2026-03-01",
+    "insertion_after": null,
+    "issued_on": "2026-02-12",
+    "new_text": "14 calendar days",
+    "old_text": "30 calendar days",
+    "operation": "substitute",
+    "source_document": "source/amendment/Amendment No. 2026-01.md",
+    "source_end": 842,
+    "source_start": 510,
+    "target_provision": "§9.1.4"
+  },
+  {
+    "amendment_id": "2026-01",
+    "amendment_paragraph": "3.1",
+    "applicability": [
+      {
+        "change_on_or_after": null,
+        "covered_period_rule": null,
+        "determination_on_or_after": "2026-03-01",
+        "raw_text": "Paragraph 5.1: applies to determinations on or after the amendment effective date.",
+        "source_paragraph": "3.1"
+      },
+      {
+        "change_on_or_after": null,
+        "covered_period_rule": "Apply figures in force on each day of a period spanning the effective date and apportion.",
+        "determination_on_or_after": null,
+        "raw_text": "**5.3** Where a claim relates to a period spanning 1 March 2026, the applicable figures are those in force on each day of the period, and the award is apportioned accordingly under §7.4.3.\n\n---\n\n*End of Amendment No. 2026-01.*",
+        "source_paragraph": "5.3"
+      }
+    ],
+    "effective_on": "2026-03-01",
+    "insertion_after": null,
+    "issued_on": "2026-02-12",
+    "new_text": "| Household size | Monthly threshold |\n|:--|:--|\n| 1 | $1,225 |\n| 2 | $1,650 |\n| 3 | $2,075 |\n| 4 | $2,500 |\n| 5 | $2,925 |\n| each additional member | + $425 |\n\n## 4. Sanctions",
+    "old_text": null,
+    "operation": "replace_table",
+    "source_document": "source/amendment/Amendment No. 2026-01.md",
+    "source_end": 1080,
+    "source_start": 842,
+    "target_provision": "§6.6.1"
+  },
+  {
+    "amendment_id": "2026-01",
+    "amendment_paragraph": "4.1",
+    "applicability": [
+      {
+        "change_on_or_after": null,
+        "covered_period_rule": null,
+        "determination_on_or_after": "2026-03-01",
+        "raw_text": "Paragraph 5.1: applies to determinations on or after the amendment effective date.",
+        "source_paragraph": "4.1"
+      },
+      {
+        "change_on_or_after": null,
+        "covered_period_rule": "Apply figures in force on each day of a period spanning the effective date and apportion.",
+        "determination_on_or_after": null,
+        "raw_text": "**5.3** Where a claim relates to a period spanning 1 March 2026, the applicable figures are those in force on each day of the period, and the award is apportioned accordingly under §7.4.3.\n\n---\n\n*End of Amendment No. 2026-01.*",
+        "source_paragraph": "5.3"
+      }
+    ],
+    "effective_on": "2026-03-01",
+    "insertion_after": null,
+    "issued_on": "2026-02-12",
+    "new_text": "15 per cent",
+    "old_text": "20 per cent",
+    "operation": "substitute",
+    "source_document": "source/amendment/Amendment No. 2026-01.md",
+    "source_end": 1149,
+    "source_start": 1080,
+    "target_provision": "§10.5.2"
+  },
+  {
+    "amendment_id": "2026-01",
+    "amendment_paragraph": "4.2",
+    "applicability": [
+      {
+        "change_on_or_after": null,
+        "covered_period_rule": null,
+        "determination_on_or_after": "2026-03-01",
+        "raw_text": "Paragraph 5.1: applies to determinations on or after the amendment effective date.",
+        "source_paragraph": "4.2"
+      },
+      {
+        "change_on_or_after": null,
+        "covered_period_rule": "Apply figures in force on each day of a period spanning the effective date and apportion.",
+        "determination_on_or_after": null,
+        "raw_text": "**5.3** Where a claim relates to a period spanning 1 March 2026, the applicable figures are those in force on each day of the period, and the award is apportioned accordingly under §7.4.3.\n\n---\n\n*End of Amendment No. 2026-01.*",
+        "source_paragraph": "5.3"
+      }
+    ],
+    "effective_on": "2026-03-01",
+    "insertion_after": "§10.5.3",
+    "issued_on": "2026-02-12",
+    "new_text": "A sanction must not be imposed in respect of a failure to report where the change of circumstances in question would have increased the award.",
+    "old_text": null,
+    "operation": "insert",
+    "source_document": "source/amendment/Amendment No. 2026-01.md",
+    "source_end": 1370,
+    "source_start": 1149,
+    "target_provision": "§10.5.3A"
+  }
+]

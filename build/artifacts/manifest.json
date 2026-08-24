@@ -1,0 +1,13 @@
+{
+  "amendment_count": 6,
+  "amendments_file": "amendments.json",
+  "artifact_schema_version": 1,
+  "index_count": 143,
+  "index_file": "search_index.json",
+  "provision_count": 137,
+  "provisions_file": "provisions.json",
+  "source_documents": [
+    "source/original/policy-manual.md",
+    "source/amendment/Amendment No. 2026-01.md"
+  ]
+}
